@@ -5,7 +5,6 @@
 
 const char mqttpTopicTemperature[] = "home/state/temperature";
 const char mqttpTopicHumidity[] = "home/state/humidity";
-const bool mqttpSensorRetained = false;
 
 #define DHTPIN D1 // Digital pin connected to the DHT sensor
 // Feather HUZZAH ESP8266 note: use pins 3, 4, 5, 12, 13 or 14 --
@@ -22,11 +21,11 @@ void readTemperature()
    sensors_event_t event;
    dht.temperature().getEvent(&event);
    float t = event.temperature;
-   readItem("Temperature: ", t, "*C", mqttpTopicTemperature);
+   mqttPublish("Temperature: ", t, "*C", mqttpTopicTemperature);
 
    dht.humidity().getEvent(&event);
    float h = event.relative_humidity;
-   readItem("Humidity: ", h, "%", mqttpTopicHumidity);
+   mqttPublish("Humidity: ", h, "%", mqttpTopicHumidity);
 }
 
 void dhtBegin()

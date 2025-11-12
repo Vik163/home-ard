@@ -44,13 +44,23 @@ void setTrustAnchors()
    wifiClient.setTrustAnchors(&certISRG);
 };
 
+void mqttPublish(const char *title, float value, const char *item, const char *topic)
+{
+
+   if (value != NAN)
+   {
+      printf("%s%.1f %s\n", title, value, item);
+   }
+   else
+   {
+      printf("Error reading: %s\n", title);
+   }
+
+   String str_temp(value);
+   mqttClient.publish(topic, str_temp.c_str(), mqttpDiviceStatusRetained);
+}
+
 void mqttLoop()
 {
    mqttClient.loop();
-};
-
-void mqttPublish(const char *topic, const char *payload, boolean retained)
-{
-   mqttClient.publish(topic, payload, retained);
-   ;
 };

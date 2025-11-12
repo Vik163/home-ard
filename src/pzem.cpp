@@ -10,41 +10,24 @@ const char mqttpTopicPower[] = "home/state/power";
 const char mqttpTopicFrequency[] = "home/state/frequency";
 const char mqttpTopicEnergy[] = "home/state/energy";
 const char mqttpTopicPf[] = "home/state/pf";
-const bool mqttpSensorRetained = false;
-
-void readItem(const char *title, float value, const char *item, const char *topic)
-{
-
-   if (value != NAN)
-   {
-      printf("%s%.1f %s\n", title, value, item);
-   }
-   else
-   {
-      printf("Error reading: %s\n", title);
-   }
-
-   String str_temp(value);
-   mqttPublish(topic, str_temp.c_str(), mqttpSensorRetained);
-}
 
 void readVoltage()
 {
    float voltage = pzem.voltage();
-   readItem("Voltage: ", voltage, "V", mqttpTopicVoltage);
+   mqttPublish("Voltage: ", voltage, "V", mqttpTopicVoltage);
 
    float current = pzem.current();
-   readItem("Current: ", current, "A", mqttpTopicCurrent);
+   mqttPublish("Current: ", current, "A", mqttpTopicCurrent);
 
    float power = pzem.power();
-   readItem("Power: ", power, "W", mqttpTopicPower);
+   mqttPublish("Power: ", power, "W", mqttpTopicPower);
 
    float energy = pzem.energy();
-   readItem("Energy: ", energy, "kWh", mqttpTopicEnergy);
+   mqttPublish("Energy: ", energy, "kWh", mqttpTopicEnergy);
 
    float frequency = pzem.frequency();
-   readItem("Frequency: ", frequency, "Hz", mqttpTopicFrequency);
+   mqttPublish("Frequency: ", frequency, "Hz", mqttpTopicFrequency);
 
    float pf = pzem.pf();
-   readItem("PowerFactor: ", pf, "", mqttpTopicPf);
+   mqttPublish("PowerFactor: ", pf, "", mqttpTopicPf);
 }

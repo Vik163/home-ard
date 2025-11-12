@@ -3,8 +3,6 @@
 #include <header.hpp>
 #include <credentialWifi.hpp>
 
-void setTrustAnchors();
-
 bool wifiConnected()
 {
    // Если подключение активно, то просто выходим и возвращаем true
