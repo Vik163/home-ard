@@ -2,6 +2,7 @@
 #include <WiFiClient.h>
 #include <header.hpp>
 #include <credentialWifi.hpp>
+#include <UniversalTelegramBot.h>
 
 bool wifiConnected()
 {
@@ -69,7 +70,7 @@ bool wifiConnected()
       struct tm timeinfo;
       localtime_r(&now, &timeinfo);
       Serial.print("Current time: ");
-      Serial.print(asctime(&timeinfo));
+      Serial.println(asctime(&timeinfo));
 
       // Теперь можно привязать корневой сертификат к клиенту WiFi
       setTrustAnchors();

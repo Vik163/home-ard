@@ -1,18 +1,21 @@
 #include <SoftwareSerial.h>
+
 #include <header.hpp>
 
 void setup(void)
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println();
 
+  setupPushTelegram();
+
   // Initialize device.
+  // reserveMemory(); // не работает  с такой конфигурацией (вместе с телеграмом)
   dhtBegin();
 }
 
 void loop(void)
 {
-
   if (wifiConnected())
   {
     if (mqttConnected())
@@ -23,5 +26,5 @@ void loop(void)
     }
   }
 
-  delay(5000);
+  delay(10000);
 }

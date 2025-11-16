@@ -27,6 +27,10 @@ bool mqttConnected()
       {
          Serial.println("ok");
          mqttClient.publish(mqttpTopicDiviceStatus, mqttpDiviceStatusOn, mqttpDiviceStatusRetained);
+         // mqttClient.subscribe(mqttpTopicMax, mqttpDiviceStatusQos);
+         // mqttClient.subscribe(mqttpTopicMin, mqttpDiviceStatusQos);
+
+         // mqttClient.setCallback(mqttOnIncomingMsg);
       }
       else
       {
