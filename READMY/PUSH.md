@@ -17,7 +17,7 @@ _Pushbullet - это интернет-сервис для отправки SMS, 
 // #include <Arduino.h> - может не понадобится
 #include <PushbulletAPI.hpp>
 
-const char *pushbullet_key = "o.Aom8oIiu6F4VKuEn0eMtYpE7dosflyKZ"; // Access Token Pushbullet
+const char *pushbullet_key = "x.XXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Access Token Pushbullet
 const char *pushbullet_fingerprint = "17eaf737a32e449de50a17cb6bf9a487a8a30a98aa61a9ef1698374c85727f6f";
 
 // You can pass fingerprint verification by using:
