@@ -1,9 +1,6 @@
 #include <Arduino.h>
-#include <string>
 
 #include <header.hpp>
-
-using namespace std;
 
 /**
  * Функция обратного вызова при поступлении входящего сообщения от брокера
@@ -19,20 +16,15 @@ void mqttOnIncomingMsg(char *topic, uint8_t *payload, unsigned int length)
    _payload.toLowerCase();
    _payload.trim();
 
-   float value = std::stoi(_payload.c_str()); // привожу строку к числу типа float
-
    // Сравниваем с топиками
    String _topic(topic);
-   if (_topic.equals(mqttpTopicMax))
+
+   if (_topic.equals(mqttLoginTopic))
    {
-      setMaxValue(value);
-   }
-   else if (_topic.equals(mqttpTopicMin))
-   {
-      setMinValue(value);
+      setPassValue(_payload.c_str());
    }
    else
    {
-      Serial.println("Failed to recognize incoming topic!");
+      Serial.println("Failed incoming topic!");
    };
 }

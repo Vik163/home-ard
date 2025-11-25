@@ -1,30 +1,51 @@
+#include <stdint.h> // для определения uint8_t
+#include <credentialLogin.hpp>
 
-bool wifiConnected(); // wifiConnect.cpp устанавливает соединение и синхронизирует время
+void wifiConnect();     // wifiConnect.cpp устанавливает соединение и синхронизирует время
+bool wifiIsConnected(); // возвращает true если связь установлена
 
 bool mqttConnected();   // mqttConnect.cpp  устанавливает соединение с брокером
 void setTrustAnchors(); // mqttConnect.cpp -> wifiConnect.cpp  добавляет сертификат
 void mqttLoop();        // mqttConnect.cpp -> main.cpp  вызывается в цикле
 
 void mqttPublish(const char *title, float value, const char *item, const char *topic); // mqttConnect.cpp -> dht.cpp, pzem.cpp
+void mqttPublishStr(const char *title, const char *value, const char *topic);          // mqttConnect.cpp -> login.cpp
 // отправляет данные брокеру
+
+void login();
+void setPassValue(const char *value); // login.cpp -> mqttControl.cpp
+
+void initSD();
+bool existFile(const char *filename);
+void writeFile(const char *filename, const char *data);           // Делает запись в файле на SD
+void writeArrayFiles(const char *filename, int *arr);             // Делает записи из массива в файле на SD
+int getNumLineFile(const char *filename);                         // возвращает количество записей в файле
+int *readFileTypeInt(const char *filename, const int size_array); // возвращает динамический массив
+void removeFile(const char *filename);
 
 void dhtBegin();        // dht.cpp -> main.cpp  вызывается в setup
 void readTemperature(); // dht.cpp -> main.cpp  вызывается в цикле
+int readVoltage();      // pzem.cpp -> main.cpp  вызывается в цикле
 
-void readVoltage(); // pzem.cpp -> main.cpp  вызывается в цикле
+void setStatisticsData(); // statistics.cpp -> main.cpp  вызывается в цикле
+
+void setTimeThreshold(int count); // statistics.cpp -> main.cpp  вызывается в цикле
 
 // mqttControl.cpp -> mqttConnect.cpp Функция обратного вызова при поступлении входящего сообщения от брокера
-void mqttOnIncomingMsg(char *topic, byte *payload, unsigned int length);
+void mqttOnIncomingMsg(char *topic, uint8_t *payload, unsigned int length);
 
 void setupPushTelegram();     // pushTelegram.cpp -> main.cpp
 void sendMessageMinVoltage(); // pushTelegram.cpp -> pzem.cpp в setMinMaxValue()
-
-// void reserveMemory();
-
-void setMaxValue(float value); // pzwm.cpp -> mqttControl.cpp
-void setMinValue(float value); // pzwm.cpp -> mqttControl.cpp
 
 const char mqttpTopicAverage[] = "home/state/average";
 const char mqttpTopicThreshold[] = "home/state/threshold";
 const char mqttpTopicMax[] = "home/state/max";
 const char mqttpTopicMin[] = "home/state/min";
+
+const char fileVolt[] = "vt.txt";
+const int size_statics_array = 5;  // каждые 20 минут в течении 24 часов (3*24=72 значения в массиве)
+const int size_volt_array = 4;     // каждые 15 секунд в течении 20 минут (4*20=80 значения в массиве)
+const int statistics_interval = 5; // каждые 20 мин = 240 в loop() main.cpp
+
+const int min_limit = 165; // TODO использую в условиях ограничивая входящие значения если проблем не будет можно удалить
+const int max_limit = 270;

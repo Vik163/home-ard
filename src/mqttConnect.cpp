@@ -20,21 +20,22 @@ bool mqttConnected()
 {
    if (!mqttClient.connected())
    {
-      Serial.print("Connecting to mqtt broker: ");
+      Serial.print("Connecting to mqtt: ");
       mqttClient.setServer(mqttServer, mqttPort);
 
       if (mqttClient.connect(mqttClientId, mqttUser, mqttPass, mqttpTopicDiviceStatus, mqttpDiviceStatusQos, mqttpDiviceStatusRetained, mqttpDiviceStatusOff))
       {
          Serial.println("ok");
          mqttClient.publish(mqttpTopicDiviceStatus, mqttpDiviceStatusOn, mqttpDiviceStatusRetained);
-         // mqttClient.subscribe(mqttpTopicMax, mqttpDiviceStatusQos);
-         // mqttClient.subscribe(mqttpTopicMin, mqttpDiviceStatusQos);
+         mqttClient.subscribe(mqttLoginTopic, mqttpDiviceStatusQos);
 
-         // mqttClient.setCallback(mqttOnIncomingMsg);
+         mqttClient.publish(mqttLoginTopic, "no", mqttpDiviceStatusRetained);
+
+         mqttClient.setCallback(mqttOnIncomingMsg);
       }
       else
       {
-         Serial.print(" failed, error code: ");
+         Serial.print(" Mqtt failed, error code: ");
          Serial.print(mqttClient.state());
          Serial.println("!");
       }
@@ -43,6 +44,9 @@ bool mqttConnected()
    return true;
 }
 
+/**
+ * функция добавления сертификата
+ */
 void setTrustAnchors()
 {
    wifiClient.setTrustAnchors(&certISRG);
@@ -50,18 +54,22 @@ void setTrustAnchors()
 
 void mqttPublish(const char *title, float value, const char *item, const char *topic)
 {
-
    if (value != NAN)
    {
-      printf("%s%.1f %s\n", title, value, item);
+      // printf("%s%.1f %s\n", title, value, item);
    }
    else
-   {
       printf("Error reading: %s\n", title);
-   }
 
    String str_temp(value);
    mqttClient.publish(topic, str_temp.c_str(), mqttpDiviceStatusRetained);
+}
+
+void mqttPublishStr(const char *title, const char *value, const char *topic)
+{
+   // printf("%s%.1f %s\n", title, value, item);
+
+   mqttClient.publish(topic, value, mqttpDiviceStatusRetained);
 }
 
 void mqttLoop()
