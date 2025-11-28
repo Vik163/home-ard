@@ -1,8 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+
+#include <UniversalTelegramBot.h>
+
 #include <header.hpp>
 #include <credentialWifi.hpp>
-#include <UniversalTelegramBot.h>
 
 void wifiConnect()
 {
@@ -67,7 +69,7 @@ void wifiConnect()
    Serial.println(asctime(&timeinfo));
 
    // Теперь можно привязать корневой сертификат к клиенту WiFi
-   setTrustAnchors();
+   // setTrustAnchors();
 }
 
 bool wifiIsConnected()

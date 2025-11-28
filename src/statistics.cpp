@@ -1,124 +1,140 @@
 #include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 #include <header.hpp>
 
-const char *fileMin = "min.txt";
-const char *fileMax = "max.txt";
-const char *fileAverage = "avr.txt";
-const char *fileThreshold = "thd.txt";
+const char *fileMin = "min";
+const char *fileMax = "max";
+const char *fileAverage = "avr";
+const char *fileThreshold = "thd";
+const char *fileVolt = "vt";
 
-int checkFile(const char *filename)
+int arrVolt[size_volt_array];
+int *newArrValue = new int[size_statics_array];
+
+// // запись в файл с проверкой на лимиты
+// void writeValue(const char *filename, int value)
+// {
+//    if (filename == fileThreshold && value >= 0 && value <= statistics_interval)
+//       writeFile(filename, String(value).c_str()); // если не сравнялся дополняем
+//    if (filename != fileThreshold && value > min_limit && value < max_limit)
+//       writeFile(filename, String(value).c_str());
+// }
+
+void setVoltValues(int value, int index)
 {
-   int size_array = 0;
+   arrVolt[index] = value;
+}
 
-   bool isFile = existFile(filename);
+int *setStatisticsValues(const char *filename, int value, JsonArray arr)
+{
+   int size_new_array = arr.size();
 
-   if (isFile)
+   for (JsonVariant v : arr)
    {
-      size_array = getNumLineFile(filename); // число линий массива
-      if (size_array > size_statics_array)
-      {
-         removeFile(filename);
-         size_array = 0;
-      }
-      return size_array;
+      Serial.print(F("Arr: "));
+      Serial.println(v.as<int>());
    }
-   else
-      return size_array;
-}
+   // int size_new_array = sizeof(arr) / sizeof(arr);
 
-// запись в файл с проверкой на лимиты
-void writeValue(const char *filename, int value)
-{
-   if (filename == fileThreshold && value >= 0 && value <= statistics_interval)
-      writeFile(filename, String(value).c_str()); // если не сравнялся дополняем
-   if (filename != fileThreshold && value > min_limit && value < max_limit)
-      writeFile(filename, String(value).c_str());
-}
+   Serial.print(F("VoltValues: "));
+   Serial.println(value);
+   delete newArrValue;
 
-void setStatisticsValues(const char *filename, int value)
-{
+   int *newArrValue = new int[size_statics_array]; // новый массив на замену старого
 
-   int size_array = checkFile(filename); // проверка файла наличие и переполнение (возвращает количество записей или 0)
-
-   int *newArrValue = new int[size_array]; // новый массив на замену старого
-
-   if (size_array > 0) // если данные есть в файле
+   for (int j = 0; j < size_new_array; j = j + 1)
    {
-      int *arrValues = readFileTypeInt(filename, size_array); // читаем файл и получаем массив с числами
-      if (arrValues)
+      Serial.print(F("newArrValue[j]0: "));
+      Serial.println(newArrValue[j]);
+   }
+
+   // int size_new_array = sizeof(arrValues) / sizeof(arrValues);
+
+   if (arr && size_new_array > 0) // если данные есть в файле
+   {
+      Serial.print(F("size_new_array: "));
+      Serial.println(size_new_array);
+      int newValueMin = 220;   // для max min
+      int newValueMax = 220;   // для max max
+      int newValueAverage = 0; // для среднего
+
+      // Публикация MQTT =================================
+      for (int i = 0; i < size_new_array; i = i + 1)
       {
-         int newValueMin = 220;   // для max min
-         int newValueMax = 220;   // для max max
-         int newValueAverage = 0; // для среднего
+         int val = arr[i];
+         Serial.print(F("val: "));
+         Serial.println(val);
 
-         // Публикация MQTT =================================
-         for (int i = 0; i < size_array; i = i + 1)
+         if (filename == fileMin && val < newValueMin) // добавил ограничения от багов
          {
-            if (filename == fileMin && arrValues[i] < newValueMin) // добавил ограничения от багов
-            {
-               newValueMin = arrValues[i]; // выбираем меньшее значение
-            }
-            else if (filename == fileMax && arrValues[i] > newValueMax)
-            {
-               newValueMax = arrValues[i]; // выбираем большее значение
-            }
-            else if (filename == fileAverage)
-            {
-               newValueAverage += arrValues[i]; // складываем для среднего значения
-            }
-            else if (filename == fileThreshold)
-            {
-               newValueAverage += arrValues[i]; // складываем для среднего значения
-            }
+            newValueMin = val; // выбираем меньшее значение
          }
-
-         if (filename == fileMin)
+         else if (filename == fileMax && val > newValueMax)
          {
-            mqttPublish("Min U for 24h: ", newValueMin, "V", mqttpTopicMin);
-         }
-         else if (filename == fileMax)
-         {
-            mqttPublish("Max U for 24h: ", newValueMax, "V", mqttpTopicMax);
+            newValueMax = val; // выбираем большее значение
          }
          else if (filename == fileAverage)
          {
-            mqttPublish("For 24h: ", newValueAverage / size_array, "V", mqttpTopicAverage); // отправляю среднее значение
+            newValueAverage += val; // складываем для среднего значения
          }
          else if (filename == fileThreshold)
          {
-            int totalMinutes = newValueAverage * 5 / 60; // перевел в минуты
-            mqttPublish("totalMinutes U < 190v: ", totalMinutes, "m", mqttpTopicThreshold);
+            newValueAverage += val; // складываем для среднего значения
          }
-         // ==================================================
-
-         if (size_array >= size_statics_array) // если размер массива сравнялся с пределом - меняем файлы с данными
-         {
-            removeFile(filename); // 1. удаляем файл с данными
-
-            for (int j = 0; j < size_array; j = j + 1)
-            {
-               if (j + 1 < size_array)
-               {
-                  newArrValue[j] = arrValues[j + 1]; // заполняем новый массив сдвигая числа старого в начало на один
-               }
-               else
-               {
-                  newArrValue[j] = value; // добавляем в конец массива новое значение
-               }
-            }
-            writeArrayFiles(filename, newArrValue); // создаём новый файл с новыми значениями
-         }
-         else
-            // заполняет массив пока не полный
-            writeValue(filename, value);
       }
-      delete arrValues; // удаляет из памяти массив
+
+      if (filename == fileMin)
+      {
+         mqttPublish("Min U for 24h: ", newValueMin, "V", mqttpTopicMin);
+      }
+      else if (filename == fileMax)
+      {
+         mqttPublish("Max U for 24h: ", newValueMax, "V", mqttpTopicMax);
+      }
+      else if (filename == fileAverage)
+      {
+         mqttPublish("For 24h: ", newValueAverage / size_statics_array, "V", mqttpTopicAverage); // отправляю среднее значение
+      }
+      else if (filename == fileThreshold)
+      {
+         int totalMinutes = newValueAverage * 5 / 60; // перевел в минуты
+         mqttPublish("totalMinutes U < 190v: ", totalMinutes, "m", mqttpTopicThreshold);
+      }
+      // ==================================================
+
+      if (size_new_array >= size_statics_array) // если размер массива сравнялся с пределом - меняем файлы с данными
+      {
+         for (int j = 0; j < size_statics_array; j = j + 1)
+         {
+            if (j + 1 < size_statics_array)
+            {
+               int val = arr[j + 1];
+               newArrValue[j] = val; // заполняем новый массив сдвигая числа старого в начало на один
+            }
+            else
+            {
+               newArrValue[j] = value; // добавляем в конец массива новое значение
+            }
+         }
+      }
+      else
+      {
+         for (int j = 0; j < size_new_array; j = j + 1)
+         {
+            Serial.print(F("newArrValue[j]: "));
+            Serial.println(newArrValue[j]);
+         }
+         Serial.print(F("newArrValue[size_new_array]: "));
+         Serial.println(newArrValue[size_new_array]);
+         newArrValue[size_new_array] = value;
+      }
+      return newArrValue;
    }
    else
-      // первая строчка в файле
-      writeValue(filename, value);
-
-   delete newArrValue; // удаляет из памяти массив
+   {
+      newArrValue[0] = value;
+      return newArrValue;
+   }
 }
 
 /**
@@ -127,34 +143,84 @@ void setStatisticsValues(const char *filename, int value)
  */
 void setStatisticsData()
 {
-   int size_array = checkFile(fileVolt); // проверка переполнения файла
+   int minVal = 220;
+   int maxVal = 220;
+   int averageVal = 0;
 
-   // сортирую сохранённые в файле значения напряжения
-   if (size_array > 0)
+   int size_array = sizeof(arrVolt) / sizeof(arrVolt);
+
+   Serial.print(F("Size: "));
+   Serial.println(size_array);
+
+   for (int i = 0; i < size_array; i = i + 1)
    {
-      int *arrValue = readFileTypeInt(fileVolt, size_volt_array);
-      int minVal = 220;
-      int maxVal = 220;
-      int averageVal = 0;
-
-      for (int i = 0; i < size_volt_array; i = i + 1)
+      Serial.print(F("arrVolt: "));
+      Serial.println(arrVolt[i]);
+      if (arrVolt[i] < minVal)
       {
-         if (arrValue[i] < minVal)
-         {
-            minVal = arrValue[i];
-         }
-         else if (arrValue[i] > maxVal)
-            maxVal = arrValue[i];
-
-         averageVal += arrValue[i];
+         minVal = arrVolt[i];
       }
-      setStatisticsValues(fileMin, minVal);
-      setStatisticsValues(fileMax, maxVal);
-      setStatisticsValues(fileAverage, averageVal / size_volt_array);
+      else if (arrVolt[i] > maxVal)
+         maxVal = arrVolt[i];
 
-      removeFile(fileVolt);
-      delete arrValue;
+      averageVal += arrVolt[i];
    }
+   String data = getRequestServer();
+   if (data != "error")
+   {
+      JsonDocument doc;
+
+      DeserializationError error = deserializeJson(doc, data);
+      if (error)
+      {
+         Serial.print(F("deserializeJson() failed: "));
+         Serial.println(error.c_str());
+         // return;
+      }
+
+      Serial.print(F("POST: "));
+      serializeJson(doc, Serial);
+      Serial.println();
+
+      int *arrMin = setStatisticsValues(fileMin, minVal, doc[fileMin]);
+      int *arrMax = setStatisticsValues(fileMax, maxVal, doc[fileMax]);
+      int *arrAverage = setStatisticsValues(fileAverage, averageVal / size_volt_array, doc[fileAverage]);
+
+      doc.clear();
+
+      int size_min = sizeof(arrMin) / sizeof(arrMin);
+      JsonArray digitalMin = doc[fileMin].to<JsonArray>();
+      for (int i = 0; i < size_min; i++)
+      {
+         digitalMin.add(arrMin[i]);
+      }
+      delete arrMin;
+
+      int size_max = sizeof(arrMax) / sizeof(arrMax);
+      JsonArray digitalMax = doc[fileMax].to<JsonArray>();
+      for (int i = 0; i < size_max; i++)
+      {
+         digitalMax.add(arrMax[i]);
+      }
+      delete arrMax;
+
+      int size_average = sizeof(arrAverage) / sizeof(arrAverage);
+      JsonArray digitalAverage = doc[fileAverage].to<JsonArray>();
+      for (int i = 0; i < size_average; i++)
+      {
+         digitalAverage.add(arrAverage[i]);
+      }
+      delete arrAverage;
+
+      Serial.print(F("POST3: "));
+      serializeJson(doc, Serial);
+      Serial.println();
+      if (doc[fileMin] && doc[fileMax] && doc[fileAverage])
+         postRequestServer(doc);
+   }
+
+   // delete arrVolt;
+   // arrVolt = new int[size_volt_array];
 }
 
 /**
@@ -163,5 +229,5 @@ void setStatisticsData()
  */
 void setTimeThreshold(int count)
 {
-   setStatisticsValues(fileThreshold, count);
+   // setStatisticsValues(fileThreshold, count);
 }

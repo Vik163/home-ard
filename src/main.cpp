@@ -13,14 +13,15 @@ void setup(void)
   Serial.println();
 
   wifiConnect();
+  serverBegin();
 
-  initSD();
+  // initSD();
 
-  setupPushTelegram();
+  // setupPushTelegram();
 
   dhtBegin();
 
-  login();
+  // login();
 }
 
 void loop(void)
@@ -43,17 +44,16 @@ void loop(void)
 
       if (k_volt == 1 && value > min_limit && value < max_limit) // каждые 15 сек записывает в файл показания напряжения
       {
-        writeFile(fileVolt, String(value).c_str());
+        setVoltValues(value, k_stat);
+        k_stat++;
         k_volt = 0;
       }
 
-      k_stat++;
-
-      if (k_stat == statistics_interval) // каждые 20 мин = 240 обрабатывает накопленные данные
+      if (k_stat == 2) // каждые 20 мин = 240 обрабатывает накопленные данные
       {
         setStatisticsData();
         k_stat = 0;
-        setTimeThreshold(k_threshold);
+        // setTimeThreshold(k_threshold);
         k_threshold = 0;
       }
     }

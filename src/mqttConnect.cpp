@@ -12,9 +12,10 @@ const int mqttpDiviceStatusQos = 1;
 const bool mqttpDiviceStatusRetained = true;
 
 // Корневой сертификат
-BearSSL::X509List certISRG(ISRG_Root_x1);
-BearSSL::WiFiClientSecure wifiClient;
-PubSubClient mqttClient(wifiClient);
+WiFiClient wifiClientMqtt;
+// BearSSL::WiFiClientSecure wifiClientMqtt;
+// BearSSL::X509List certISRG(ISRG_Root_x1);
+PubSubClient mqttClient(wifiClientMqtt);
 
 bool mqttConnected()
 {
@@ -47,10 +48,9 @@ bool mqttConnected()
 /**
  * функция добавления сертификата
  */
-void setTrustAnchors()
-{
-   wifiClient.setTrustAnchors(&certISRG);
-};
+// void setTrustAnchors() {
+// wifiClientMqtt.setTrustAnchors(&certISRG);
+// };
 
 void mqttPublish(const char *title, float value, const char *item, const char *topic)
 {
