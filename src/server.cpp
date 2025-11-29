@@ -3,7 +3,7 @@
 #include <API.hpp>
 #include <header.hpp>
 
-const String url = "http://192.168.0.15/api/ard";
+const String url = "http://192.168.227.166/api/ard";
 
 // Корневой сертификат
 WiFiClient client;

@@ -9,7 +9,7 @@ const char *fileThreshold = "thd";
 const char *fileVolt = "vt";
 
 int arrVolt[size_volt_array];
-int *newArrValue = new int[size_statics_array];
+// int *newArrValue = new int[size_statics_array];
 
 // // запись в файл с проверкой на лимиты
 // void writeValue(const char *filename, int value)
@@ -25,41 +25,27 @@ void setVoltValues(int value, int index)
    arrVolt[index] = value;
 }
 
-int *setStatisticsValues(const char *filename, int value, JsonArray arr)
+int *setStatisticsValues(const char *filename, int value, JsonArray &arr)
 {
-   int size_new_array = arr.size();
 
-   for (JsonVariant v : arr)
-   {
-      Serial.print(F("Arr: "));
-      Serial.println(v.as<int>());
-   }
-   // int size_new_array = sizeof(arr) / sizeof(arr);
+   int size_arr = arr.size();
+   int *newArrValue = new int[size_arr];
 
    Serial.print(F("VoltValues: "));
    Serial.println(value);
-   delete newArrValue;
-
-   int *newArrValue = new int[size_statics_array]; // новый массив на замену старого
-
-   for (int j = 0; j < size_new_array; j = j + 1)
-   {
-      Serial.print(F("newArrValue[j]0: "));
-      Serial.println(newArrValue[j]);
-   }
 
    // int size_new_array = sizeof(arrValues) / sizeof(arrValues);
 
-   if (arr && size_new_array > 0) // если данные есть в файле
+   if (arr && size_arr > 0) // если данные есть в файле
    {
       Serial.print(F("size_new_array: "));
-      Serial.println(size_new_array);
+      Serial.println(size_arr);
       int newValueMin = 220;   // для max min
       int newValueMax = 220;   // для max max
       int newValueAverage = 0; // для среднего
 
       // Публикация MQTT =================================
-      for (int i = 0; i < size_new_array; i = i + 1)
+      for (int i = 0; i < size_arr; i = i + 1)
       {
          int val = arr[i];
          Serial.print(F("val: "));
@@ -102,7 +88,7 @@ int *setStatisticsValues(const char *filename, int value, JsonArray arr)
       }
       // ==================================================
 
-      if (size_new_array >= size_statics_array) // если размер массива сравнялся с пределом - меняем файлы с данными
+      if (size_arr >= size_statics_array) // если размер массива сравнялся с пределом - меняем файлы с данными
       {
          for (int j = 0; j < size_statics_array; j = j + 1)
          {
@@ -119,20 +105,42 @@ int *setStatisticsValues(const char *filename, int value, JsonArray arr)
       }
       else
       {
-         for (int j = 0; j < size_new_array; j = j + 1)
+         for (int j = 0; j <= size_arr; j = j + 1)
          {
-            Serial.print(F("newArrValue[j]: "));
-            Serial.println(newArrValue[j]);
+            if (j == size_arr)
+            {
+               arr[j] = value; // добавляем в конец массива новое значение
+               Serial.print(F("value: "));
+               Serial.println(value);
+            }
+            else
+            {
+               // int v = arr[j].as<int>();
+               // arr[j] = v; // заполняем новый массив сдвигая числа старого в начало на один
+               // Serial.print(F("v: "));
+               // Serial.println(v);
+            }
          }
-         Serial.print(F("newArrValue[size_new_array]: "));
-         Serial.println(newArrValue[size_new_array]);
-         newArrValue[size_new_array] = value;
+         // for (int j = 0; j < size_new_array; j = j + 1)
+         // {
+         //    Serial.print(F("newArrValue[j]final: "));
+         //    Serial.println(newArrValue[j]);
+         // }
       }
+      delete newArrValue;
       return newArrValue;
    }
    else
    {
-      newArrValue[0] = value;
+      JsonDocument doc;
+      JsonArray arrJson = doc[filename].to<JsonArray>();
+
+      arrJson.add(value);
+
+      // Serial.print(F("arrMin[i]: "));
+      // Serial.println(arrMin[i]);
+      // newArrValue[0] = value;
+      delete newArrValue;
       return newArrValue;
    }
 }
@@ -178,44 +186,52 @@ void setStatisticsData()
          // return;
       }
 
-      Serial.print(F("POST: "));
+      JsonArray arrMin = doc[fileMin];
+      int *arrMinVal = setStatisticsValues(fileMin, minVal, arrMin);
+
+      // int *arrMax = setStatisticsValues(fileMax, maxVal, doc[fileMax]);
+
+      // int *newArrAverage = new int[size_statics_array];
+      // int *arrAverage = setStatisticsValues(fileAverage, averageVal / size_volt_array, doc[fileAverage], newArrAverage);
+      // delete newArrAverage;
+
+      // Serial.print(F("OLD POST: "));
+      // serializeJson(doc, Serial);
+      // Serial.println();
+
+      // doc.clear();
+
+      // int size_min = sizeof(arrMin) / sizeof(arrMin);
+      // JsonArray digitalMin = doc[fileMin].to<JsonArray>();
+      // for (int i = 0; i < size_min; i++)
+      // {
+
+      //    Serial.print(F("arrMin[i]: "));
+      //    Serial.println(arrMin[i]);
+      //    digitalMin.add(arrMin[i]);
+      // }
+      // // delete arrMin;
+
+      // int size_max = sizeof(arrMax) / sizeof(arrMax);
+      // JsonArray digitalMax = doc[fileMax].to<JsonArray>();
+      // for (int i = 0; i < size_max; i++)
+      // {
+      //    digitalMax.add(arrMax[i]);
+      // }
+      // delete arrMax;
+
+      // int size_average = sizeof(arrAverage) / sizeof(arrAverage);
+      // JsonArray digitalAverage = doc[fileAverage].to<JsonArray>();
+      // for (int i = 0; i < size_average; i++)
+      // {
+      //    digitalAverage.add(arrAverage[i]);
+      // }
+      // delete arrAverage;
+
+      Serial.print(F("NEW POST: "));
       serializeJson(doc, Serial);
       Serial.println();
-
-      int *arrMin = setStatisticsValues(fileMin, minVal, doc[fileMin]);
-      int *arrMax = setStatisticsValues(fileMax, maxVal, doc[fileMax]);
-      int *arrAverage = setStatisticsValues(fileAverage, averageVal / size_volt_array, doc[fileAverage]);
-
-      doc.clear();
-
-      int size_min = sizeof(arrMin) / sizeof(arrMin);
-      JsonArray digitalMin = doc[fileMin].to<JsonArray>();
-      for (int i = 0; i < size_min; i++)
-      {
-         digitalMin.add(arrMin[i]);
-      }
-      delete arrMin;
-
-      int size_max = sizeof(arrMax) / sizeof(arrMax);
-      JsonArray digitalMax = doc[fileMax].to<JsonArray>();
-      for (int i = 0; i < size_max; i++)
-      {
-         digitalMax.add(arrMax[i]);
-      }
-      delete arrMax;
-
-      int size_average = sizeof(arrAverage) / sizeof(arrAverage);
-      JsonArray digitalAverage = doc[fileAverage].to<JsonArray>();
-      for (int i = 0; i < size_average; i++)
-      {
-         digitalAverage.add(arrAverage[i]);
-      }
-      delete arrAverage;
-
-      Serial.print(F("POST3: "));
-      serializeJson(doc, Serial);
-      Serial.println();
-      if (doc[fileMin] && doc[fileMax] && doc[fileAverage])
+      if (doc[fileMin])
          postRequestServer(doc);
    }
 
