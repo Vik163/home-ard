@@ -1,15 +1,27 @@
-#include <WiFiClient.h>
-#include <ESP8266HTTPClient.h>
-#include <API.hpp>
-#include <header.hpp>
 
-const String url = "http://192.168.0.15/api/ard";
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
+
+#include <header.hpp>
+#include <credentialHttp.hpp>
 
 // Корневой сертификат
 WiFiClient client;
 HTTPClient http;
 
-void postRequestServer(JsonDocument doc)
+// // Корневой сертификат
+// WiFiClientSecure client;
+// X509List certRoot(IRG_Root_X1);
+
+// /**
+//  * функция добавления сертификата
+//  */
+// void setTrustAnchors()
+// {
+//    client.setTrustAnchors(&certRoot);
+// };
+
+void postRequest(JsonDocument doc)
 {
    Serial.print(F("Sending: "));
    serializeJson(doc, Serial);
@@ -25,25 +37,20 @@ void postRequestServer(JsonDocument doc)
    Serial.println(httpResponseCode);
 }
 
-String getRequestServer()
+String getRequest()
 {
    String payload;
-
    int httpCode = http.GET();
 
-   // httpCode will be negative on error
    if (httpCode > 0)
    {
-      // HTTP header has been send and Server response header has been handled
       // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
 
-      // file found at server
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
       {
          payload = http.getString();
          // Serial.println(payload);
       }
-
       return payload;
    }
    else
@@ -53,18 +60,20 @@ String getRequestServer()
    }
 }
 
-bool serverBegin()
+void httpBegin()
 {
-   if (http.begin(client, url))
+   if (http.begin(client, URL_DESK)) // URL_SERVER - сервер (https), URL_DESK - комп (http), URL_NOUT - ноут (http)
    {
-      String payload = getRequestServer();
-      getResponseServer(payload);
+      getRequest();
+   }
+}
+
+bool httpConnected()
+{
+   if (http.connected())
+   {
       return true;
    }
    else
       return false;
-}
-void serverEnd()
-{
-   http.end();
 }

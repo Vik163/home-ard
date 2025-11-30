@@ -6,15 +6,10 @@
 void wifiConnect();     // wifiConnect.cpp устанавливает соединение и синхронизирует время
 bool wifiIsConnected(); // возвращает true если связь установлена
 
-bool httpBegin();
-void httpEnd();
-
-bool serverBegin();
-void serverEnd();
-// String getRequestServer();
-void postRequest();
-String getRequestServer();
-void postRequestServer(JsonDocument doc);
+void httpBegin();
+bool httpConnected();
+void postRequest(JsonDocument doc);
+String getRequest();
 
 bool mqttConnected(); // mqttConnect.cpp  устанавливает соединение с брокером
 void mqttLoop();      // mqttConnect.cpp -> main.cpp  вызывается в цикле
@@ -45,7 +40,7 @@ void setVoltValues(int value, int index);
 void setStatisticsData(int count_thd); // statistics.cpp -> main.cpp  вызывается в цикле
 
 // mqttControl.cpp -> mqttConnect.cpp Функция обратного вызова при поступлении входящего сообщения от брокера
-void mqttOnIncomingMsg(char *topic, uint8_t *payload, unsigned int length);
+// void mqttOnIncomingMsg(char *topic, uint8_t *payload, unsigned int length);
 
 void setupPushTelegram();     // pushTelegram.cpp -> main.cpp
 void sendMessageMinVoltage(); // pushTelegram.cpp -> pzem.cpp в setMinMaxValue()

@@ -13,13 +13,13 @@ void setup(void)
   Serial.println();
 
   wifiConnect();
-  serverBegin();
+  httpBegin();
 
-  // setupPushTelegram();
+  setupPushTelegram();
 
   dhtBegin();
 
-  // login();
+  login();
 }
 
 void loop(void)
@@ -32,26 +32,30 @@ void loop(void)
 
       readTemperature();
       int value = readVoltage();
-
-      if (value < THRESHOLD) // счетчик минимального напряжения
+      Serial.print(F("httpConnected(): "));
+      Serial.println(httpConnected());
+      if (httpConnected())
       {
-        k_threshold++;
-      }
+        if (value < THRESHOLD) // счетчик минимального напряжения
+        {
+          k_threshold++;
+        }
 
-      k_volt++;
+        k_volt++;
 
-      if (k_volt == 1 && value > min_limit && value < max_limit) // каждые 15 сек записывает в файл показания напряжения
-      {
-        setVoltValues(value, k_stat);
-        k_stat++;
-        k_volt = 0;
-      }
+        if (k_volt == 1 && value > min_limit && value < max_limit) // каждые 15 сек записывает в файл показания напряжения
+        {
+          setVoltValues(value, k_stat);
+          k_stat++;
+          k_volt = 0;
+        }
 
-      if (k_stat == 3) // каждые 20 мин = 240 обрабатывает накопленные данные
-      {
-        setStatisticsData(k_threshold);
-        k_stat = 0;
-        k_threshold = 0;
+        if (k_stat == 3) // каждые 20 мин = 240 обрабатывает накопленные данные
+        {
+          setStatisticsData(k_threshold);
+          k_stat = 0;
+          k_threshold = 0;
+        }
       }
     }
   }
