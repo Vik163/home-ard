@@ -3,7 +3,7 @@
 #include <API.hpp>
 #include <header.hpp>
 
-const String url = "http://192.168.227.166/api/ard";
+const String url = "http://192.168.0.15/api/ard";
 
 // Корневой сертификат
 WiFiClient client;
@@ -35,13 +35,13 @@ String getRequestServer()
    if (httpCode > 0)
    {
       // HTTP header has been send and Server response header has been handled
-      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
       {
          payload = http.getString();
-         Serial.println(payload);
+         // Serial.println(payload);
       }
 
       return payload;

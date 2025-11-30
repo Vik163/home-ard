@@ -15,8 +15,6 @@ void setup(void)
   wifiConnect();
   serverBegin();
 
-  // initSD();
-
   // setupPushTelegram();
 
   dhtBegin();
@@ -49,11 +47,10 @@ void loop(void)
         k_volt = 0;
       }
 
-      if (k_stat == 2) // каждые 20 мин = 240 обрабатывает накопленные данные
+      if (k_stat == 3) // каждые 20 мин = 240 обрабатывает накопленные данные
       {
-        setStatisticsData();
+        setStatisticsData(k_threshold);
         k_stat = 0;
-        // setTimeThreshold(k_threshold);
         k_threshold = 0;
       }
     }

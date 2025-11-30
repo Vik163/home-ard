@@ -42,9 +42,7 @@ int readVoltage();      // pzem.cpp -> main.cpp  вызывается в цик�
 
 void setVoltValues(int value, int index);
 
-void setStatisticsData(); // statistics.cpp -> main.cpp  вызывается в цикле
-
-void setTimeThreshold(int count); // statistics.cpp -> main.cpp  вызывается в цикле
+void setStatisticsData(int count_thd); // statistics.cpp -> main.cpp  вызывается в цикле
 
 // mqttControl.cpp -> mqttConnect.cpp Функция обратного вызова при поступлении входящего сообщения от брокера
 void mqttOnIncomingMsg(char *topic, uint8_t *payload, unsigned int length);
@@ -57,9 +55,7 @@ const char mqttpTopicThreshold[] = "home/state/threshold";
 const char mqttpTopicMax[] = "home/state/max";
 const char mqttpTopicMin[] = "home/state/min";
 
-const int size_statics_array = 5;  // каждые 20 минут в течении 24 часов (3*24=72 значения в массиве)
-const int size_volt_array = 4;     // каждые 15 секунд в течении 20 минут (4*20=80 значения в массиве)
-const int statistics_interval = 5; // каждые 20 мин = 240 в loop() main.cpp
-
-const int min_limit = 165; // TODO использую в условиях ограничивая входящие значения если проблем не будет можно удалить
+const int size_statics_array = 5; // каждые 20 минут в течении 24 часов (3*24=72 значения в массиве)
+const int size_volt_array = 3;    // каждые 15 секунд в течении 20 минут (4*20=80 значения в массиве)
+const int min_limit = 165;        // TODO использую в условиях ограничивая входящие значения если проблем не будет можно удалить
 const int max_limit = 270;
