@@ -27,7 +27,7 @@ const char *pushbullet_fingerprint = "17eaf737a32e449de50a17cb6bf9a487a8a30a98aa
 // PushbulletAPI pb(pushbullet_key, pushbullet_fingerprint, true);
 // * when using this, if fingerprint is not match to pushbullet certificate it won't connect.
 // Or use the basic, with fingerprint but dynamically. So if fingerprint is not match it will set a warning in seiral port but still push messages throw pushbullet.
-PushbulletAPI pb(pushbullet_key, pushbullet_fingerprint);
+PushbulletAPI pb(pushbullet_key);
 
 void setupPushBullet()
 {
@@ -40,3 +40,25 @@ pushbullet_fingerprint
 - кликнуть по значку 'соединение защищено' сайта -> безопасное подключение -> действительный сертификат -> подробнее
 
 ![pushbullet_fingerprint](../imagesReadme/pushbullet.png)
+
+## Telegram
+
+Библиотека <https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot/archive/refs/heads/master.zip>
+
+```c++
+ #include <WiFiClientSecure.h>
+ #include <UniversalTelegramBot.h>
+
+ #define BOT_TOKEN "8086716133:AAG5ln4XXztQ9lWlDWGmYm1zKCNrwb35hvY" // получить через @BotFather
+ #define CHAT_ID "5118278868" // получить через @userinfobot
+
+ X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+
+ WiFiClientSecure secured_client;
+ UniversalTelegramBot bot(BOT_TOKEN, secured_client);
+
+ void setupPushTelegram()
+ {
+    secured_client.setTrustAnchors(&cert); // Add root certificate for api.telegram.org
+ }
+```

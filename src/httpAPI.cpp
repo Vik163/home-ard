@@ -5,27 +5,37 @@
 #include <header.hpp>
 #include <credentialHttp.hpp>
 
-// Корневой сертификат
-WiFiClient client;
 HTTPClient http;
+HTTPClient httpPush;
 
-// // Корневой сертификат
-// WiFiClientSecure client;
-// X509List certRoot(IRG_Root_X1);
+// Корневой сертификат
+// WiFiClient client;
+WiFiClientSecure client;
+X509List certRoot(IRG_Root_X1);
 
-// /**
-//  * функция добавления сертификата
-//  */
-// void setTrustAnchors()
-// {
-//    client.setTrustAnchors(&certRoot);
-// };
+/**
+ * функция добавления сертификата
+ */
+void setTrustAnchors()
+{
+   client.setTrustAnchors(&certRoot);
+};
+
+void sendPush(String text)
+{
+   httpPush.addHeader("Content-Type", "text/plain");
+   int httpResponseCode = httpPush.POST(text);
+
+   Serial.print("PUSH code... ");
+   Serial.println(httpResponseCode);
+   httpPush.end(); // закрываем, чтобы освободить память (а то работает через раз)
+}
 
 void postRequest(JsonDocument doc)
 {
-   Serial.print(F("Sending: "));
-   serializeJson(doc, Serial);
-   Serial.println();
+   // Serial.print(F(""));
+   // serializeJson(doc, Serial);
+   // Serial.println();
 
    String output;
    serializeJson(doc, output);
@@ -33,8 +43,11 @@ void postRequest(JsonDocument doc)
    http.addHeader("Content-Type", "application/json");
    int httpResponseCode = http.POST(output);
 
+   doc.clear(); // очищаем json, чтобы освободить память
+
    Serial.print("POST code... ");
    Serial.println(httpResponseCode);
+   http.end(); // закрываем, чтобы освободить память (а то работает через раз)
 }
 
 String getRequest()
@@ -62,9 +75,17 @@ String getRequest()
 
 void httpBegin()
 {
-   if (http.begin(client, URL_DESK)) // URL_SERVER - сервер (https), URL_DESK - комп (http), URL_NOUT - ноут (http)
+   if (http.begin(client, URL_SERVER)) // URL_SERVER - сервер (https), URL_DESK - комп (http), URL_NOUT - ноут (http)
    {
       getRequest();
+   }
+}
+
+void httpBeginPush()
+{
+   if (httpPush.begin(client, URL_SERVER_PUSH))
+   {
+      sendPush("Снова на связи!");
    }
 }
 

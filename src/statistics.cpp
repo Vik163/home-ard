@@ -8,11 +8,11 @@ const char *fileAverage = "avr";
 const char *fileThreshold = "thd";
 const char *fileVolt = "vt";
 
-int arrVolt[size_volt_array]; // глобальный массив постоянного размера для хранения замеров напряжения
-int k_min = 0;
-int k_max = 0;
-int k_avr = 0;
-int k_thd = 0;
+int arrVolt[k_arr_5min]; // глобальный массив постоянного размера для хранения замеров напряжения
+
+int minVal = 220;
+int maxVal = 220;
+int averageVal = 0;
 
 JsonDocument doc;
 
@@ -20,6 +20,33 @@ JsonDocument doc;
 void setVoltValues(int value, int index)
 {
    arrVolt[index] = value;
+}
+
+// меняет значения в глобальном массиве
+void handleVoltValues()
+{
+   int avr = 0;
+   for (int i = 0; i < k_arr_5min; i = i + 1)
+   {
+      if (arrVolt[i])
+      {
+         if (arrVolt[i] < minVal)
+         {
+            minVal = arrVolt[i];
+         }
+         else if (arrVolt[i] > maxVal)
+            maxVal = arrVolt[i];
+
+         avr += arrVolt[i];
+      }
+   }
+
+   if (averageVal == 0)
+   {
+      averageVal = avr / k_arr_5min;
+   }
+   else
+      averageVal = (averageVal + avr / k_arr_5min) / 2;
 }
 
 // функция получет сведённое значение напряжения, массив json  и сохряняет в массив json (& - ссылка на массив, для получения всех его элементов)
@@ -32,6 +59,11 @@ void setStatisticsValues(const char *filename, int value, JsonArray &arr)
       int newValueMin = 220;   // для max min
       int newValueMax = 220;   // для max max
       int newValueAverage = 0; // для среднего
+
+      int k_min = 0;
+      int k_max = 0;
+      int k_avr = 0;
+      int k_thd = 0;
 
       // Публикация MQTT =================================
       for (int i = 0; i < size_arr; i = i + 1)
@@ -137,28 +169,6 @@ void setStatisticsValues(const char *filename, int value, JsonArray &arr)
  */
 void setStatisticsData(int count_thd)
 {
-   int minVal = 220;
-   int maxVal = 220;
-   int averageVal = 0;
-   int k_length_avr = 0;
-
-   // int size_array_volt = sizeof(&arrVolt) / sizeof(&arrVolt); только для динамических массивов
-
-   for (int i = 0; i < size_volt_array; i = i + 1)
-   {
-      if (arrVolt[i])
-      {
-         if (arrVolt[i] < minVal)
-         {
-            minVal = arrVolt[i];
-         }
-         else if (arrVolt[i] > maxVal)
-            maxVal = arrVolt[i];
-
-         averageVal += arrVolt[i];
-         k_length_avr++;
-      }
-   }
    String data = getRequest();
    if (data != "error")
    {
@@ -168,7 +178,7 @@ void setStatisticsData(int count_thd)
       {
          Serial.print(F("deserializeJson() failed: "));
          Serial.println(error.c_str());
-         // return;
+         return;
       }
 
       JsonArray arrMin = doc[fileMin]; // создаю ссылку на массив
@@ -178,8 +188,7 @@ void setStatisticsData(int count_thd)
       setStatisticsValues(fileMax, maxVal, arrMax);
 
       JsonArray arrAverage = doc[fileAverage];
-      setStatisticsValues(fileAverage, averageVal / k_length_avr, arrAverage);
-      k_length_avr = 0;
+      setStatisticsValues(fileAverage, averageVal, arrAverage);
 
       JsonArray arrThd = doc[fileThreshold];
       setStatisticsValues(fileThreshold, count_thd, arrThd);
@@ -187,5 +196,7 @@ void setStatisticsData(int count_thd)
       // отправляю post - запрос
       if (doc[fileMin] && doc[fileMax] && doc[fileAverage] && doc[fileThreshold])
          postRequest(doc);
+
+      doc.clear(); // очищаем json, чтобы освободить память
    }
 }
