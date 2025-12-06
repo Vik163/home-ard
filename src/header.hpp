@@ -25,6 +25,7 @@ void mqttPublishStr(const char *title, const char *value, const char *topic);   
 void dhtBegin();        // dht.cpp -> main.cpp  вызывается в setup
 void readTemperature(); // dht.cpp -> main.cpp  вызывается в цикле
 int readVoltage();      // pzem.cpp -> main.cpp  вызывается в цикле
+void resetEnergy();
 
 void setVoltValues(int value, int index);
 void handleVoltValues();

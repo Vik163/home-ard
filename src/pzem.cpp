@@ -16,6 +16,11 @@ const char mqttpTopicFrequency[] = "home/state/frequency";
 const char mqttpTopicEnergy[] = "home/state/energy";
 const char mqttpTopicPf[] = "home/state/pf";
 
+void resetEnergy()
+{
+   pzem.resetEnergy();
+}
+
 int readVoltage()
 {
    float voltage = pzem.voltage();

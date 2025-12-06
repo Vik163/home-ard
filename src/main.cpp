@@ -17,6 +17,7 @@ void setup(void)
   httpBegin();
 
   dhtBegin();
+  // resetEnergy(); сброс счётчика энергии
 }
 
 void loop(void)

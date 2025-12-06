@@ -26,6 +26,9 @@ void setVoltValues(int value, int index)
 void handleVoltValues()
 {
    int avr = 0;
+   minVal = 220;
+   maxVal = 220;
+
    for (int i = 0; i < k_arr_5min; i = i + 1)
    {
       if (arrVolt[i])
@@ -169,7 +172,7 @@ void setStatisticsValues(const char *filename, int value, JsonArray &arr)
  */
 void setStatisticsData(int count_thd)
 {
-   String data = getRequest();
+   String data = getRequest(); // нужно в базу загрузить первоначальные данные
    if (data != "error")
    {
 
